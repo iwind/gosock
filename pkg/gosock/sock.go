@@ -38,6 +38,10 @@ func NewSock(path string) *Sock {
 	return sock
 }
 
+func NewTmpSock(name string) *Sock {
+	return NewSock(os.TempDir() + "/" + name)
+}
+
 func (this *Sock) Listen() error {
 	// 是否正在使用
 	_, err := this.Dial()
