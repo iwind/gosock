@@ -70,3 +70,8 @@ func TestSock_Send(t *testing.T) {
 	}
 	t.Log("reply:", reply)
 }
+
+func TestSock_IsListening(t *testing.T) {
+	var sock = NewSock("test.sock")
+	t.Log(sock.IsListening())
+}

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"net"
 	"os"
+	"time"
 )
 
 var ErrSockInUse = errors.New("bind: address already in use")
@@ -20,13 +21,21 @@ type Sock struct {
 	onErrorFunc   func(err error)
 
 	callbackMap map[string]func(params map[string]interface{})
+	ticker      *time.Ticker
 }
 
 func NewSock(path string) *Sock {
-	return &Sock{
+	var sock = &Sock{
 		path:        path,
 		callbackMap: map[string]func(params map[string]interface{}){},
+		ticker:      time.NewTicker(5 * time.Second),
 	}
+	go func() {
+		for range sock.ticker.C {
+			sock.fix()
+		}
+	}()
+	return sock
 }
 
 func (this *Sock) Listen() error {
@@ -45,12 +54,18 @@ func (this *Sock) Listen() error {
 	if err != nil {
 		return err
 	}
+
 	this.listener = listener
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
 			// 重新监听
-			return this.Listen()
+			listener, err = net.Listen("unix", this.path)
+			if err != nil {
+				return err
+			}
+			this.listener = listener
+			continue
 		}
 		go this.handle(conn, func(cmd *Command) {
 			if this.onCommandFunc != nil {
@@ -104,6 +119,15 @@ func (this *Sock) Send(cmd *Command) (reply *Command, err error) {
 	return reply, nil
 }
 
+func (this *Sock) IsListening() bool {
+	conn, err := this.Dial()
+	if err != nil {
+		return false
+	}
+	_ = conn.Close()
+	return true
+}
+
 func (this *Sock) handle(conn net.Conn, callback func(cmd *Command)) {
 	var buf = make([]byte, 1024)
 	var cmdBuf = []byte{}
@@ -133,5 +157,16 @@ func (this *Sock) handle(conn net.Conn, callback func(cmd *Command)) {
 		if err != nil {
 			return
 		}
+	}
+}
+
+// fix sock file
+func (this *Sock) fix() {
+	if this.listener == nil {
+		return
+	}
+	_, err := os.Stat(this.path)
+	if os.IsNotExist(err) {
+		_ = this.listener.Close()
 	}
 }
