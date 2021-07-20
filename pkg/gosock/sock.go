@@ -132,6 +132,13 @@ func (this *Sock) IsListening() bool {
 	return true
 }
 
+func (this *Sock) Close() error {
+	if this.listener == nil {
+		return nil
+	}
+	return this.listener.Close()
+}
+
 func (this *Sock) handle(conn net.Conn, callback func(cmd *Command)) {
 	var buf = make([]byte, 1024)
 	var cmdBuf = []byte{}
