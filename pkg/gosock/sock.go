@@ -39,7 +39,7 @@ func NewSock(path string) *Sock {
 }
 
 func NewTmpSock(name string) *Sock {
-	return NewSock(os.TempDir() + "/" + name)
+	return NewSock(os.TempDir() + "/" + name + ".sock")
 }
 
 func (this *Sock) Listen() error {
