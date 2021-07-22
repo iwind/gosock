@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net"
 	"testing"
+	"time"
 )
 
 func TestSock_Listen(t *testing.T) {
@@ -74,4 +75,20 @@ func TestSock_Send(t *testing.T) {
 func TestSock_IsListening(t *testing.T) {
 	var sock = NewSock("test.sock")
 	t.Log(sock.IsListening())
+}
+
+func TestSock_Close(t *testing.T) {
+	var sock = NewSock("test.sock")
+	go func() {
+		t.Log("listening ...")
+		t.Log(sock.Listen())
+		t.Log("end listening")
+	}()
+	time.Sleep(1 * time.Second)
+	err := sock.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(sock.Listen())
 }

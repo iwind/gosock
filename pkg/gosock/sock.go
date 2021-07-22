@@ -22,6 +22,8 @@ type Sock struct {
 
 	callbackMap map[string]func(params map[string]interface{})
 	ticker      *time.Ticker
+
+	isClosed bool
 }
 
 func NewSock(path string) *Sock {
@@ -43,6 +45,8 @@ func NewTmpSock(name string) *Sock {
 }
 
 func (this *Sock) Listen() error {
+	this.isClosed = false
+
 	// 是否正在使用
 	_, err := this.Dial()
 	if err == nil {
@@ -63,6 +67,11 @@ func (this *Sock) Listen() error {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
+			// 是否为主动关闭
+			if this.isClosed {
+				return nil
+			}
+
 			// 重新监听
 			listener, err = net.Listen("unix", this.path)
 			if err != nil {
@@ -133,6 +142,7 @@ func (this *Sock) IsListening() bool {
 }
 
 func (this *Sock) Close() error {
+	this.isClosed = true
 	if this.listener == nil {
 		return nil
 	}
