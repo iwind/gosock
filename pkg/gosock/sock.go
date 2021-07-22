@@ -139,6 +139,10 @@ func (this *Sock) Close() error {
 	return this.listener.Close()
 }
 
+func (this *Sock) Path() string {
+	return this.path
+}
+
 func (this *Sock) handle(conn net.Conn, callback func(cmd *Command)) {
 	var buf = make([]byte, 1024)
 	var cmdBuf = []byte{}
