@@ -110,6 +110,10 @@ func (this *Sock) OnError(f func(err error)) {
 }
 
 func (this *Sock) Send(cmd *Command) (reply *Command, err error) {
+	return this.SendTimeout(cmd, 0)
+}
+
+func (this *Sock) SendTimeout(cmd *Command, timeout time.Duration) (reply *Command, err error) {
 	conn, err := this.Dial()
 	if err != nil {
 		return nil, err
@@ -124,11 +128,17 @@ func (this *Sock) Send(cmd *Command) (reply *Command, err error) {
 		return nil, err
 	}
 
+	if timeout > 0 {
+		_ = conn.SetReadDeadline(time.Now().Add(timeout))
+	}
 	this.handle(conn, func(cmd *Command) {
 		reply = cmd
 		_ = conn.Close()
 	})
 
+	if reply == nil {
+		return nil, errors.New("waiting for reply timeout")
+	}
 	return reply, nil
 }
 

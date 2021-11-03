@@ -16,6 +16,9 @@ func TestSock_Listen(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		if cmd.Code == "sleep" {
+			time.Sleep(1 * time.Second)
+		}
 		t.Log(string(cmdJSON))
 		err = cmd.ReplyOk()
 		if err != nil {
@@ -66,6 +69,18 @@ func TestSock_Send(t *testing.T) {
 		Code:   "stop",
 		Params: map[string]interface{}{},
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("reply:", reply)
+}
+
+func TestSock_SendTimeout(t *testing.T) {
+	var sock = NewSock("test.sock")
+	reply, err := sock.SendTimeout(&Command{
+		Code:   "sleep",
+		Params: map[string]interface{}{},
+	}, 1*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
