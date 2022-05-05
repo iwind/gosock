@@ -97,6 +97,10 @@ func (this *Sock) Dial() (net.Conn, error) {
 	return net.Dial("unix", this.path)
 }
 
+func (this *Sock) DialTimeout(timeout time.Duration) (net.Conn, error) {
+	return net.DialTimeout("unix", this.path, timeout)
+}
+
 func (this *Sock) OnCommand(f func(cmd *Command)) {
 	this.onCommandFunc = f
 }
